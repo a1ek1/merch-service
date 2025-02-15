@@ -1,6 +1,8 @@
 package datastore
 
 import (
+	"database/sql"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"merch-service/internal/domain/model"
@@ -13,14 +15,24 @@ type authTokenRepository struct {
 }
 
 func (a authTokenRepository) Create(token *model.AuthToken) error {
-	dbToken := dbAuthToken{
-		UserID:    token.UserID,
-		Token:     token.Token,
-		ExpiresAt: token.ExpiresAt,
-	}
-	query := `INSERT INTO auth_tokens (user_id, token, expired_at) VALUES (:user_id, :token, :expired_at)`
-	_, err := a.Conn.NamedExec(query, dbToken)
+	query := `INSERT INTO auth_tokens (user_id, token, expired_at) VALUES ($1, $2, $3)`
+	_, err := a.Conn.Exec(query, token.UserID, token.Token, token.ExpiresAt)
 	return err
+}
+
+func (a authTokenRepository) GetActiveTokenByUserID(userID uuid.UUID) (*model.AuthToken, error) {
+	var token model.AuthToken
+	err := a.Conn.QueryRow(
+		"SELECT token, expired_at FROM auth_tokens WHERE user_id = $1 AND expired_at > $2 ORDER BY expired_at DESC LIMIT 1",
+		userID, time.Now(),
+	).Scan(&token.Token, &token.ExpiresAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &token, nil
 }
 
 func (a authTokenRepository) GetByToken(token string) (*model.AuthToken, error) {

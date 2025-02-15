@@ -15,18 +15,9 @@ type userRepository struct {
 
 func (u userRepository) Create(user *model.User) error {
 	query := `INSERT INTO users (id, username, password, coins, created_at, updated_at) 
-              VALUES (:id, :username, :password, :coins, :created_at, :updated_at)`
+              VALUES ($1, $2, $3, $4, $5, $6)`
 
-	dbUser := dbUser{
-		ID:        uuid.New(),
-		Username:  user.Username,
-		Password:  user.Password,
-		Coins:     1000,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	_, err := u.Conn.NamedExec(query, dbUser)
+	_, err := u.Conn.Exec(query, user.ID, user.Username, user.Password, 1000, time.Now(), time.Now())
 	if err != nil {
 		log.Printf("Ошибка при вставке пользователя: %v", err)
 	}
@@ -70,16 +61,13 @@ func (u userRepository) GetUserByUsername(username string) (*model.User, error) 
 }
 
 func (u userRepository) UpdateBalance(id uuid.UUID, balance int) error {
-	query := `UPDATE users SET coins = :coins, updated_at = NOW() WHERE id = :id`
-	_, err := u.Conn.NamedExec(query, map[string]interface{}{
-		"id":    id,
-		"coins": balance,
-	})
+	query := `UPDATE users SET coins = $1, updated_at = NOW() WHERE id = $2`
+	_, err := u.Conn.Exec(query, balance, id)
 	return err
 }
 
 func (u userRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM users WHERE id = :id`
+	query := `DELETE FROM users WHERE id = $1`
 	_, err := u.Conn.Exec(query, id)
 	return err
 }

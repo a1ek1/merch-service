@@ -15,15 +15,11 @@ type inventoryRepository struct {
 func (i inventoryRepository) AddItem(userID uuid.UUID, itemID uuid.UUID, quantity int) error {
 	query := `
 		INSERT INTO inventory (user_id, item_id, quantity) 
-		VALUES (:user_id, :item_id, :quantity)
+		VALUES ($1, $2, $3)
 		ON CONFLICT (user_id, item_id) 
-		DO UPDATE SET quantity = inventory.quantity + :quantity, updated_at = NOW()
+		DO UPDATE SET quantity = inventory.quantity + $3, updated_at = NOW()
 	`
-	_, err := i.Conn.NamedExec(query, map[string]interface{}{
-		"user_id":  userID,
-		"item_id":  itemID,
-		"quantity": quantity,
-	})
+	_, err := i.Conn.Exec(query, userID, itemID, quantity)
 	return err
 }
 

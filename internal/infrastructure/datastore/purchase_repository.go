@@ -13,18 +13,10 @@ type purchaseRepository struct {
 }
 
 func (p purchaseRepository) Create(purchase *model.Purchase) error {
-	dbPur := dbPurchase{
-		UserID:      purchase.UserID,
-		ItemID:      purchase.ItemID,
-		Quantity:    purchase.Quantity,
-		TotalPrice:  purchase.TotalPrice,
-		PurchasedAt: time.Now(),
-	}
-
 	query := `INSERT INTO purchases (user_id, item_id, quantity, total_price, purchased_at) 
-			  VALUES (:user_id, :item_id, :quantity, :total_price, :purchased_at)`
+			  VALUES ($1, $2, $3, $4, $5)`
 
-	_, err := p.Conn.NamedExec(query, dbPur)
+	_, err := p.Conn.Exec(query, purchase.UserID, purchase.ItemID, purchase.Quantity, purchase.TotalPrice, time.Now())
 	return err
 }
 

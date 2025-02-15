@@ -12,21 +12,15 @@ type itemRepository struct {
 }
 
 func (i itemRepository) Create(item *model.Item) error {
-	dbIt := dbItem{
-		Title: item.Title,
-		Price: item.Price,
-	}
-	query := `INSERT INTO items (title, price) VALUES (:title, :price)`
-	_, err := i.Conn.NamedExec(query, dbIt)
+	query := `INSERT INTO items (title, price) VALUES ($1, $2)`
+	_, err := i.Conn.Exec(query, item.Title, item.Price)
 	return err
 }
 
 func (i itemRepository) GetItemByTitle(title string) (*model.Item, error) {
 	var dbIt dbItem
-	query := `SELECT id, title, price FROM items WHERE title = :title`
-	err := i.Conn.Get(&dbIt, query, map[string]interface{}{
-		"title": title,
-	})
+	query := `SELECT id, title, price FROM items WHERE title = $1`
+	err := i.Conn.Get(&dbIt, query, title)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +40,6 @@ func (i itemRepository) GetAllItems() ([]model.Item, error) {
 		return nil, err
 	}
 
-	// Преобразуем полученные данные в доменную модель
 	items := make([]model.Item, len(dbItems))
 	for idx, dbIt := range dbItems {
 		items[idx] = model.Item{
@@ -59,17 +52,13 @@ func (i itemRepository) GetAllItems() ([]model.Item, error) {
 }
 
 func (i itemRepository) Update(item *model.Item) error {
-	query := `UPDATE items SET title = :title, price = :price WHERE id = :id`
-	_, err := i.Conn.NamedExec(query, map[string]interface{}{
-		"id":    item.ID,
-		"title": item.Title,
-		"price": item.Price,
-	})
+	query := `UPDATE items SET title = $1, price = $2 WHERE id = $3`
+	_, err := i.Conn.Exec(query, item.Title, item.Price, item.ID)
 	return err
 }
 
 func (i itemRepository) Delete(id uuid.UUID) error {
-	query := `DELETE FROM items WHERE id = :id`
+	query := `DELETE FROM items WHERE id = $1`
 	_, err := i.Conn.Exec(query, id)
 	return err
 }

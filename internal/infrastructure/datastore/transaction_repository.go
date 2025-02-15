@@ -13,17 +13,10 @@ type transactionRepository struct {
 }
 
 func (t transactionRepository) Create(transaction *model.Transaction) error {
-	dbTrans := dbTransaction{
-		UserID:    transaction.UserID,
-		ToUserID:  transaction.ToUserID,
-		Amount:    transaction.Amount,
-		CreatedAt: time.Now(),
-	}
-
 	query := `INSERT INTO transactions (user_id, to_user_id, amount, created_at) 
-			  VALUES (:user_id, :to_user_id, :amount, :created_at)`
+			  VALUES ($1, $2, $3, $4)`
 
-	_, err := t.Conn.NamedExec(query, dbTrans)
+	_, err := t.Conn.Exec(query, transaction.UserID, transaction.ToUserID, transaction.Amount, time.Now())
 	return err
 }
 
