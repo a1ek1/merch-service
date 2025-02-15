@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"merch-service/internal/domain/model"
 	"merch-service/internal/domain/repository"
+	"time"
 )
 
 type inventoryRepository struct {
@@ -18,23 +19,42 @@ func (i inventoryRepository) AddItem(userID uuid.UUID, itemID uuid.UUID, quantit
 		ON CONFLICT (user_id, item_id) 
 		DO UPDATE SET quantity = inventory.quantity + :quantity, updated_at = NOW()
 	`
-
 	_, err := i.Conn.NamedExec(query, map[string]interface{}{
 		"user_id":  userID,
 		"item_id":  itemID,
 		"quantity": quantity,
 	})
-
 	return err
 }
 
 func (i inventoryRepository) GetByUserID(userID uuid.UUID) ([]model.Inventory, error) {
-	var inventory []model.Inventory
+	var dbRecords []dbInventory
 	query := `SELECT * FROM inventory WHERE user_id = $1`
-	err := i.Conn.Select(&inventory, query, userID)
-	return inventory, err
+	if err := i.Conn.Select(&dbRecords, query, userID); err != nil {
+		return nil, err
+	}
+
+	inventory := make([]model.Inventory, len(dbRecords))
+	for idx, rec := range dbRecords {
+		inventory[idx] = model.Inventory{
+			ID:       rec.ID,
+			UserID:   rec.UserID,
+			ItemID:   rec.ItemID,
+			Quantity: rec.Quantity,
+		}
+	}
+	return inventory, nil
 }
 
-func NewInventoryRepository(Conn *sqlx.DB) repository.InventoryRepository {
-	return &inventoryRepository{Conn}
+func NewInventoryRepository(conn *sqlx.DB) repository.InventoryRepository {
+	return &inventoryRepository{conn}
+}
+
+type dbInventory struct {
+	ID        uuid.UUID `db:"id"`
+	UserID    uuid.UUID `db:"user_id"`
+	ItemID    uuid.UUID `db:"item_id"`
+	Quantity  int       `db:"quantity"`
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
 }
