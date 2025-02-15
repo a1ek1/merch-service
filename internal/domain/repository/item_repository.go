@@ -6,8 +6,8 @@ import (
 )
 
 type ItemRepository interface {
-	Create(item *model.Item) (uuid.UUID, error)
-	GetItemById(id uuid.UUID) (*model.Item, error)
+	Create(item *model.Item) error
+	GetItemByTitle(title string) (*model.Item, error)
 	GetAllItems() ([]model.Item, error)
 	Update(item *model.Item) error
 	Delete(id uuid.UUID) error

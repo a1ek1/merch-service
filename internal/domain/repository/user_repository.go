@@ -6,9 +6,9 @@ import (
 )
 
 type UserRepository interface {
-	Create(user *model.User) (uuid.UUID, error)
+	Create(user *model.User) error
 	GetUserById(id uuid.UUID) (*model.User, error)
 	GetUserByUsername(username string) (*model.User, error)
-	Update(user *model.User) error
+	UpdateBalance(id uuid.UUID, balance int) error
 	Delete(id uuid.UUID) error
 }
