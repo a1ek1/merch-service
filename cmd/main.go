@@ -10,6 +10,7 @@ import (
 	"merch-service/internal/interactor"
 	"merch-service/internal/presenter/http/middleware"
 	"merch-service/internal/presenter/http/router"
+	"time"
 )
 
 func main() {
@@ -19,27 +20,33 @@ func main() {
 	dbPassword := config.Get().DBPassword
 	dbName := config.Get().DBName
 	sslMode := config.Get().SSLMode
+
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		dbHost, dbPort, dbUser, dbPassword, dbName, sslMode,
 	)
-	db, err := sqlx.Connect("postgres", dsn)
+
+	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
 	defer func() {
 		if err := db.Close(); err != nil {
 			log.Printf("Failed to close database connection: %v", err)
 		}
 	}()
+
 	i := interactor.NewInteractor(db)
 	h := i.NewAppHandler()
 	e := echo.New()
+
 	router.NewRouter(e, h)
 	middleware.NewMiddleware(e)
-	port := config.Get().APPPort
-	log.Printf("Starting server on port %s", port)
-	if err := e.Start(":" + port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+
+	log.Fatal(e.Start(":8080"))
 }
