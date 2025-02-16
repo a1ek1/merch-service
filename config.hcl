@@ -1,0 +1,7 @@
+database_host = "localhost"
+database_port = "5435"
+database_user = "postgres"
+database_password = "postgres"
+database_name = "merch_service"
+database_sslmode = "disable"
+app_port = "8080"
