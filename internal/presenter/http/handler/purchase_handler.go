@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo"
 	"merch-service/internal/usecase"
@@ -40,8 +39,6 @@ func (h *purchaseHandler) BuyItem(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid user ID format"})
 	}
-
-	fmt.Println("Handler /buy/cup: Parsed userID ->", parsedUserID)
 
 	// Отправляем userID как UUID в usecase
 	err = h.purchaseUsecase.BuyItem(parsedUserID, itemName)
