@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-const baseURL = "http://localhost:8080"               // Адрес сервиса
 const itemName = "cup"                                // Название товара
 const itemNameNotFound = "nonexistent_item"           // Несуществующий товар
 const userID = "000d41d4-dd00-4ed4-8d14-5483e3147b31" // Пример UUID пользователя
@@ -21,7 +20,7 @@ func TestBuyMerch(t *testing.T) {
 		"userID":        userID,
 	}
 
-	resp := sendRequest(t, "GET", url, headers)
+	resp := sendPurchaseRequest(t, "GET", url, headers)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -37,7 +36,7 @@ func TestBuyMerchUnauthorized(t *testing.T) {
 		"Content-Type": "application/json",
 	}
 
-	resp := sendRequest(t, "GET", url, headers)
+	resp := sendPurchaseRequest(t, "GET", url, headers)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusUnauthorized {
@@ -55,7 +54,7 @@ func TestBuyMerchNotFound(t *testing.T) {
 		"userID":        userID,
 	}
 
-	resp := sendRequest(t, "GET", url, headers)
+	resp := sendPurchaseRequest(t, "GET", url, headers)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusInternalServerError {
@@ -63,7 +62,7 @@ func TestBuyMerchNotFound(t *testing.T) {
 	}
 }
 
-func sendRequest(t *testing.T, method, url string, headers map[string]string) *http.Response {
+func sendPurchaseRequest(t *testing.T, method, url string, headers map[string]string) *http.Response {
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(nil))
 	if err != nil {
 		t.Fatalf("Ошибка при создании запроса: %v", err)
