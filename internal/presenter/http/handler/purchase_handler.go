@@ -28,19 +28,16 @@ func NewPurchaseHandler(purchaseUsecase usecase.PurchaseUsecase) PurchaseHandler
 func (h *purchaseHandler) BuyItem(c echo.Context) error {
 	itemName := c.Param("item")
 
-	// Теперь userID приходит уже в формате UUID из middleware.go
 	userID, ok := c.Get("userID").(string)
 	if !ok || userID == "" {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid or missing user ID"})
 	}
 
-	// Преобразуем строку в UUID
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid user ID format"})
 	}
 
-	// Отправляем userID как UUID в usecase
 	err = h.purchaseUsecase.BuyItem(parsedUserID, itemName)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to buy item")
