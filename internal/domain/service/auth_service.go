@@ -15,7 +15,7 @@ import (
 
 type AuthService interface {
 	Authenticate(username, password string) (string, error)
-	ValidateToken(tokenStr string) (*jwt.Token, error)
+	ValidateToken(tokenStr string) (*jwt.Token, *model.JWTClaims, error)
 }
 
 type authService struct {
@@ -72,23 +72,28 @@ func (a authService) Authenticate(username, password string) (string, error) {
 
 func (a authService) generateToken(user *model.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":  user.ID.String(),
 		"username": user.Username,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
 	return token.SignedString([]byte(a.jwtSecret))
 }
 
-func (a authService) ValidateToken(tokenStr string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+func (a authService) ValidateToken(tokenStr string) (*jwt.Token, *model.JWTClaims, error) {
+	claims := &model.JWTClaims{}
+
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(a.jwtSecret), nil
 	})
+
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return token, nil
+
+	return token, claims, nil
 }
 
 func NewAuthService(userRepo repository.UserRepository, tokenRepo repository.AuthTokenRepository, jwtSecret string) AuthService {
