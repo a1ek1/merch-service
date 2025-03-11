@@ -26,7 +26,7 @@ func Get() Config {
 	once.Do(func() {
 		loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 			EnvPrefix: "NFB",
-			Files:     []string{"./config.hcl", "./config.local.hcl"},
+			Files:     []string{"../config.hcl", "../config.local.hcl"},
 			FileDecoders: map[string]aconfig.FileDecoder{
 				".hcl": aconfighcl.New(),
 			},
