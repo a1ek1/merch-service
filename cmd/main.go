@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		config.Get().DBHost, config.Get().DBPort, config.Get().DBUser,
