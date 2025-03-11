@@ -13,6 +13,45 @@ services:
       - "5435:5432"
     volumes:
       - db:/var/lib/postgresql/data/
+    networks:
+      - backend
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: merch_service
+      SSL_MODE: disable
+    entrypoint: ["/app/entrypoint.sh"]
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+  migrate:
+    image: golang:1.20
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    working_dir: /app
+    entrypoint: >
+      sh -c "
+        go install github.com/pressly/goose/v3/cmd/goose@latest &&
+        goose -dir ./migrations postgres 'postgres://postgres:postgres@db:5432/merch_service?sslmode=disable' up
+      "
+    networks:
+      - backend
 
 volumes:
   db:
+
+networks:
+  backend:
