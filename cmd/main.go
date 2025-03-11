@@ -6,24 +6,19 @@ import (
 	"github.com/labstack/echo"
 	_ "github.com/lib/pq"
 	"log"
-	"merch-service/config"
 	"merch-service/internal/interactor"
 	"merch-service/internal/presenter/http/middleware"
 	"merch-service/internal/presenter/http/router"
+	"merch-service/pkg/config"
 	"time"
 )
 
 func main() {
-	dbHost := config.Get().DBHost
-	dbPort := config.Get().DBPort
-	dbUser := config.Get().DBUser
-	dbPassword := config.Get().DBPassword
-	dbName := config.Get().DBName
-	sslMode := config.Get().SSLMode
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		dbHost, dbPort, dbUser, dbPassword, dbName, sslMode,
+		config.Get().DBHost, config.Get().DBPort, config.Get().DBUser,
+		config.Get().DBPassword, config.Get().DBName, config.Get().SSLMode,
 	)
 
 	db, err := sqlx.Open("postgres", dsn)
